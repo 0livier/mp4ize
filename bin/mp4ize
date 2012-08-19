@@ -28,11 +28,12 @@ end
 options_string = options.map{|k,v| "-#{k.to_s} #{v}"}.join(" ")
 
 class PowerBar
-  def method_missing
+  def method_missing(name, *arguments)
   end
 end
 
 p = PowerBar.new
+p.settings.tty.finite.template.main = "${<msg>}: ${[<bar>] }${<percent>% }${<elapsed>}${, ETA: <eta>}"
 FFMPEG.logger = p # Disable FFMPEG logger that was messing with PowerBar output
 
 movie.transcode(ARGV[1] || ARGV[0]+".mp4", options_string) { |progress|
