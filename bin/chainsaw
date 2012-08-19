@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'streamio-ffmpeg'
+require 'powerbar'
+
+movie = FFMPEG::Movie.new ARGV[0]
+
+abort "I'm sorry, I can't probe file" unless movie.valid?
+
+options = {
+    y: "",
+    threads: 0,
+    strict: -2,
+    map_chapters: -1,
+    vcodec: "copy",
+    acodec: "copy",
+    preset: "slower",
+    tune: "film"
+}
+
+if movie.audio_bitrate.to_i >= 224 || ! %w(mp3 ac3).include?(movie.audio_codec)
+  options[:acodec]="libmp3lame"
+  options["b:a"]="224k"
+  options[:ac]=2
+end
+
+options_string = options.map{|k,v| "-#{k.to_s} #{v}"}.join(" ")
+
+class PowerBar
+  def method_missing
+  end
+end
+
+p = PowerBar.new
+FFMPEG.logger = p
+movie.transcode(ARGV[1] || ARGV[0]+".mp4", options_string) { |progress|
+  p.show(:msg => 'Transcoding into mp4', :done => progress, :total => 1)
+}
+
